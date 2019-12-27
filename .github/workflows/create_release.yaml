@@ -3,6 +3,7 @@ name: CI
 on:
   release:
     types: [created, published]
+  push:
 
 jobs:
   build_release_macos:
