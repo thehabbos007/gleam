@@ -58,7 +58,7 @@ jobs:
           asset_name: ${{ steps.create_archive.outputs.ASSET_NAME }}
           asset_content_type: application/gzip
 
-  build_release_macos:
+  build_release_windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v1
