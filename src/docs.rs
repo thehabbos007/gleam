@@ -119,7 +119,7 @@ pub fn generate_html(
                 let mut c: Vec<_> = module.ast.statements.iter().flat_map(constant).collect();
                 c.sort();
                 c
-            }
+            },
         };
 
         let mut path = output_dir.clone();
@@ -275,13 +275,14 @@ fn constant<'a>(statement: &'a TypedStatement) -> Option<Constant<'a>> {
     match statement {
         Statement::ModuleConstant {
             public: true,
-            name,
             doc,
+            name,
+            annotation,
             value,
             ..
         } => Some(Constant {
             name,
-            definition: print(formatter.const_expr(true, name, value)),
+            definition: print(formatter.const_expr(true, name, annotation, true, value)),
             documentation: markdown_documentation(doc),
         }),
 

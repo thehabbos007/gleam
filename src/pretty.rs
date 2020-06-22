@@ -506,6 +506,10 @@ impl Document {
         Document::Cons(Box::new(self), Box::new(x.to_doc()))
     }
 
+    pub fn prepend(self, x: impl Documentable) -> Document {
+        Document::Cons(Box::new(x.to_doc()), Box::new(self))
+    }
+
     pub fn format(self, limit: isize) -> String {
         format(limit, self)
     }

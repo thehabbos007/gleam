@@ -224,13 +224,21 @@ impl<'a> Formatter<'a> {
             Statement::ModuleConstant {
                 public,
                 name,
+                annotation,
                 value,
                 ..
-            } => self.const_expr(*public, name, value),
+            } => self.const_expr(*public, name, annotation, false, value),
         }
     }
 
-    pub fn const_expr<T>(&mut self, public: bool, name: &str, value: &ConstValue<T>) -> Document {
+    pub fn const_expr<T>(
+        &mut self,
+        public: bool,
+        name: &str,
+        annotation: &Option<TypeAst>,
+        ensure_annotation: bool,
+        value: &ConstValue<T>,
+    ) -> Document {
         let value_doc = match value {
             ConstValue::Int { value, .. } | ConstValue::Float { value, .. } => {
                 value.clone().to_doc()
@@ -238,10 +246,26 @@ impl<'a> Formatter<'a> {
 
             ConstValue::String { value, .. } => value.clone().to_doc().surround("\"", "\""),
         };
-        
+
+        let value_type = if ensure_annotation {
+            Some(match value {
+                ConstValue::Int { .. } => "Int".to_doc(),
+                ConstValue::Float { .. } => "Float".to_doc(),
+                ConstValue::String { .. } => "String".to_doc(),
+            })
+        } else {
+            None
+        };
+
         pub_(public)
             .append("const ")
             .append(name.to_string())
+            .append(
+                annotation
+                    .as_ref()
+                    .map_or(value_type, |a| Some(self.type_ast(a)))
+                    .map(|t| t.prepend(": ".to_doc())),
+            )
             .append(" = ")
             .append(value_doc)
     }
