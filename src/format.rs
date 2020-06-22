@@ -226,22 +226,24 @@ impl<'a> Formatter<'a> {
                 name,
                 value,
                 ..
-            } => pub_(*public)
-                .append("const ")
-                .append(name.to_string())
-                .append(" = ")
-                .append(self.const_expr(value)),
+            } => self.const_expr(*public, name, value),
         }
     }
 
-    fn const_expr(&mut self, value: &ConstValue<()>) -> Document {
-        match value {
+    pub fn const_expr<T>(&mut self, public: bool, name: &str, value: &ConstValue<T>) -> Document {
+        let value_doc = match value {
             ConstValue::Int { value, .. } | ConstValue::Float { value, .. } => {
                 value.clone().to_doc()
             }
 
             ConstValue::String { value, .. } => value.clone().to_doc().surround("\"", "\""),
-        }
+        };
+        
+        pub_(public)
+            .append("const ")
+            .append(name.to_string())
+            .append(" = ")
+            .append(value_doc)
     }
 
     fn documented_statement(&mut self, s: &UntypedStatement) -> Document {
