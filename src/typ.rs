@@ -2277,8 +2277,13 @@ impl<'a> Typer<'a> {
         Ok((fun, args, return_type))
     }
 
-    fn infer_const(&mut self, expr: UntypedConstValue) -> Result<TypedConstValue, Error> {
-        Ok(match expr {
+    fn infer_const(
+        &mut self,
+        location: &SrcSpan,
+        annotation: &Option<TypeAst>,
+        expr: UntypedConstValue,
+    ) -> Result<TypedConstValue, Error> {
+        let typ = match expr {
             ConstValue::Int {
                 location, value, ..
             } => ConstValue::Int {
@@ -2300,7 +2305,16 @@ impl<'a> Typer<'a> {
                 typ: string(),
                 value,
             },
-        })
+        };
+
+        // Check type annotation is accurate.
+        if let Some(ann) = annotation {
+            let const_ann = self.type_from_ast(&ann, NewTypeAction::MakeGeneric)?;
+            self.unify(const_ann, typ.typ())
+                .map_err(|e| convert_unify_error(e, &location))?;
+        };
+
+        Ok(typ)
     }
 
     /// Instantiate converts generic variables into unbound ones.
@@ -3432,7 +3446,7 @@ pub fn infer_module(
                 value,
                 ..
             } => {
-                let typed_expr = typer.infer_const(*value)?;
+                let typed_expr = typer.infer_const(&location, &annotation, *value)?;
                 let typ = typed_expr.typ();
 
                 typer.insert_module_value(
