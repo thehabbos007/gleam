@@ -2309,7 +2309,7 @@ impl<'a> Typer<'a> {
 
         // Check type annotation is accurate.
         if let Some(ann) = annotation {
-            let const_ann = self.type_from_ast(&ann, NewTypeAction::MakeGeneric)?;
+            let const_ann = self.type_from_ast(&ann, NewTypeAction::Disallow)?;
             self.unify(const_ann, typ.typ())
                 .map_err(|e| convert_unify_error(e, &location))?;
         };

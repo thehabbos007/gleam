@@ -1858,6 +1858,21 @@ pub fn get(x: One) { x.name }",
             ("go", "fn(Box(a)) -> fn(Box(a)) -> Bool")
         ]
     );
+
+    // Module constants
+    assert_infer!(
+        "
+        pub const test_int1 = 123
+        pub const test_int2: Int = 321
+        pub const test_float: Float = 4.2
+        pub const test_string = \"hey!\"",
+        vec![
+            ("test_float", "Float"),
+            ("test_int1", "Int"),
+            ("test_int2", "Int"),
+            ("test_string", "String")
+        ],
+    );
 }
 
 #[test]
@@ -2500,6 +2515,16 @@ fn main() {
             expected: int(),
             given: string(),
         },
+    );
+
+    // Module constants
+    assert_error!(
+        "pub const group: Int = \"42\"",
+        Error::CouldNotUnify {
+            location: SrcSpan { start: 0, end: 27 },
+            expected: int(),
+            given: string(),
+        }
     );
 }
 
