@@ -367,6 +367,28 @@ pub struct Clause<Expr, PatternConstructor, Type, RecordTag> {
     pub then: Expr,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub enum ClauseGuardFieldAccess {
+    TypedRecordAccess(TypedExpr::RecordAccess),
+    TypedTupleIndex(TypedExpr::TupleIndex),
+}
+
+impl ClauseGuardFieldAccess {
+    pub fn location(&self) -> &SrcSpan {
+        match self {
+            TypedRecordAccess(field_access) => field_access.location(),
+            TypedTupleIndex(field_access) => field_access.location(),
+        }
+    }
+
+    fn typ(&self) -> Arc<typ::Type> {
+        match self {
+            TypedRecordAccess(TypedExpr::TupleIndex { typ, .. }) => typ.clone(),
+            TypedTupleIndex(TypedExpr::RecordAccess { typ, .. }) => typ.clone(),
+        }
+    }
+}
+
 pub type UntypedClauseGuard = ClauseGuard<(), ()>;
 pub type TypedClauseGuard = ClauseGuard<Arc<typ::Type>, String>;
 
@@ -451,12 +473,18 @@ pub enum ClauseGuard<Type, RecordTag> {
     },
 
     Constant(Constant<Type, RecordTag>),
+
+    FieldAccess{
+        untyped_field_access: UntypedExpr::FieldAccess,
+        field_access_variant: Option<ClauseGuardFieldAccess>
+    },
 }
 
 impl<A, B> ClauseGuard<A, B> {
     pub fn location(&self) -> &SrcSpan {
         match self {
             ClauseGuard::Constant(constant) => constant.location(),
+            ClauseGuard::FieldAccess(field_access) => field_access.location(),
             ClauseGuard::Or { location, .. } => location,
             ClauseGuard::And { location, .. } => location,
             ClauseGuard::Var { location, .. } => location,
@@ -479,6 +507,7 @@ impl TypedClauseGuard {
         match self {
             ClauseGuard::Var { typ, .. } => typ.clone(),
             ClauseGuard::Constant(constant) => constant.typ(),
+            ClauseGuard::FieldAccess{ field_access_variant: Some(field_access) } => field_access.typ(),
 
             ClauseGuard::Or { .. }
             | ClauseGuard::And { .. }

@@ -511,6 +511,11 @@ ClauseGuard5: UntypedClauseGuard = {
         name,
     },
 
+    <field:FieldAccess> => ClauseGuard::FieldAccess{
+        untyped_field_access: field,
+        field_access_variant: None,
+    }
+
     "{" <ClauseGuard> "}" => <>,
 }
 
